@@ -1,4 +1,5 @@
 const { ApolloServer, gql } = require('apollo-server');
+const { PossibleFragmentSpreadsRule } = require('graphql');
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -12,11 +13,19 @@ const typeDefs = gql`
     author: String
   }
 
+  # this "User" type
+  type User {
+    name: String!
+    age: Int
+    friends: [User]
+  }
+
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
   type Query {
     books: [Book]
+    users: [User]
   }
 `;
 
@@ -31,12 +40,37 @@ const books = [
   },
 ];
 
+const users = [
+  {
+    name: 'leo',
+    age: 20,
+    friends: ['woody']
+  },
+  {
+    name: 'woody',
+    age: 20,
+    friends: []
+  }
+]
+
 // Resolvers define the technique for fetching the types defined in the
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
   Query: {
     books: () => books,
+    users: () => users
   },
+  User: {
+    friends: (parent, args, context) => {
+      console.log('parent', parent);
+      console.log('args', args);
+      console.log('context', context);
+      return users.filter(user => parent.friends.includes(user.name))
+    },
+    name: () => {
+      return 'leo'
+    }
+  }
 };
 
 // The ApolloServer constructor requires two parameters: your schema

@@ -1,4 +1,4 @@
-# graphql-server
+# graphql-server-example
 
 # arguments
 
@@ -27,7 +27,7 @@ query ($name: String!) {
 }
 ```
 
-# fragment: 取出重複的 code, operation name (ex: UserData), aliases(ex: user1, user2)
+# fragment, operation name, aliases
 
 ```
 query UserData($name1: String!, $name2: String!) {

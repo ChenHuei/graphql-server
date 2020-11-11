@@ -1,1 +1,49 @@
 # graphql-server
+
+# arguments
+
+```
+query {
+  user(name: "leo") {
+    name
+    age
+    height(unit: FOOT)
+  }
+}
+```
+
+# variables
+
+```
+query ($name: String!) {
+  user(name: $name) {
+    id
+    name
+  },
+}
+
+{
+  "name": "leo"
+}
+```
+
+# fragment: 取出重複的 code
+# operation name (ex: UserData)
+# aliases(ex: user1, user2)
+
+```
+query UserData($name1: String!, $name2: String!) {
+  user1: user(name: $name1) {
+    ...userData
+  },
+  user2: user(name: $name2) {
+    ...userData
+  }
+}
+
+fragment userData on User {
+  name
+  height
+  weight
+}
+```

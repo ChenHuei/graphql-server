@@ -96,44 +96,28 @@ const resolvers = {
     self: () => users.find(user => user.name === 'leo'),
     books: () => books,
     users: () => users,
-    user: (root, args, context) => {
-      return users.find(user => user.name === args.name)
-    },
-    usersHeight: (root, args, context) => {
-      const { unit } = args
-
-      if (!Object.keys(HeightValue).includes(unit)) {
-        throw new Error('error')
-      }
-      return users.map(item => item.height * HeightValue[unit])
-    }
+    usersHeight: (root, args, context) => users.map(item => getValue('height', item.height, args.unit)),
+    user: (root, args, context) => users.find(user => user.name === args.name)
   },
   User: {
-    friends: (parent) => {
-      return users.filter(user => parent.friends.includes(user.name))
-    },
-    height: (parent, args) => {
-      const { unit } = args
-
-      if (!Object.keys(HeightValue).includes(unit)) {
-        throw new Error('error')
-      }
-      return parent.height * HeightValue[unit]
-    },
-    weight: (parent, args) => {
-      const { unit } = args
-
-      if (!Object.keys(WeightValue).includes(unit)) {
-        throw new Error('error')
-      }
-      return parent.weight * WeightValue[unit]
-    }
+    friends: (parent) => users.filter(user => parent.friends.includes(user.name)),
+    height: (parent, args) => getValue('height', parent.height, args.unit),
+    weight: (parent, args) => getValue('weight', parent.weight, args.unit)
   }
 };
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 const server = new ApolloServer({ typeDefs, resolvers });
+
+const getValue = (type, value, unit) => {
+  const unitValues = type === 'weight' ? WeightValue : HeightValue
+  
+  if (!Object.keys(unitValues).includes(unit)) {
+    throw new Error('error')
+  }
+  return value * unitValues[unit]
+}
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {

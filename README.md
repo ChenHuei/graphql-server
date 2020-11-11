@@ -47,3 +47,43 @@ fragment userData on User {
   weight
 }
 ```
+
+# mutation
+
+```
+mutation  {
+  addPost(title: "4", content: "Here's my third post.") {
+    author {
+      name
+    }
+    title
+    content
+    likeGivers {
+      name
+    }
+  }
+}
+```
+
+# input object type
+
+```
+type Mutation {
+  addPost(title: String!, content: String!): Post
+}
+
+```
+
+vs
+
+```
+# Mutation
+  input AddPostInput {
+    title: String!
+    content: String
+  }
+
+  type Mutation {
+    addPost(post: AddPostInput): Post
+  }
+```

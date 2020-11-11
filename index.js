@@ -32,7 +32,7 @@ const typeDefs = gql`
     weight(unit: WeightUnit = KILOGRAM): Float
   }
 
-  # This "Post" type
+  # This "Pots" type defines the queryable fields for every pos in our data source.
   type Post {
     id: Int!
     author: User
@@ -49,6 +49,19 @@ const typeDefs = gql`
     user(id: Int!): User
     users: [User]
     usersHeight(unit: HeightUnit = CENTIMETER): [Float]
+    posts: [Post]
+  }
+
+  # input object type
+  input AddPostInput {
+    title: String!
+    content: String
+  }
+
+  # Mutation
+  type Mutation {
+    addPost(post: AddPostInput): Post
+    likePost(id: Int!): Post
   }
 `;
 
@@ -96,7 +109,34 @@ const resolvers = {
     self: () => users.find(user => user.id === 1),
     user: (root, args, context) => users.find(user => user.id === args.id),
     users: () => users,
-    usersHeight: (root, args, context) => users.map(item => getValue('height', item.height, args.unit))
+    usersHeight: (root, args, context) => users.map(item => getValue('height', item.height, args.unit)),
+    posts: () => posts
+  },
+  Mutation: {
+    addPost: (root, args) => {
+      const { title, content } = args.post
+      const newPost = {
+        id: posts.length + 1,
+        authorId: 1,
+        likeGiverIds: [],
+        title,
+        content
+      }
+      posts.push(newPost)
+      return newPost
+    },
+    likePost: (root, args) => {
+      const post = posts.find(item => item.id === args.id)
+      if (!post) throw new Error('error')
+
+      const { likeGiverIds } = post
+
+      likeGiverIds.includes(1) 
+        ? likeGiverIds.splice(likeGiverIds.findIndex(item => item.id === 1), 1)
+        : likeGiverIds.push(1)
+      
+      return post
+    }
   },
   User: {
     friends: (parent) => users.filter(user => parent.friends.includes(user.id)),
@@ -105,7 +145,7 @@ const resolvers = {
     weight: (parent, args) => getValue('weight', parent.weight, args.unit)
   },
   Post: {
-    author: (parent) => users.find(user => user.id === parent.id),
+    author: (parent) => users.find(user => user.id === parent.authorId),
     likeGivers: (parent) => parent.likeGiverIds.map(id => users.find(user => user.id === id)),
   }
 };

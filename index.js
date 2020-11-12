@@ -1,5 +1,6 @@
 const { ApolloServer, gql } = require('apollo-server');
-const { PossibleFragmentSpreadsRule } = require('graphql');
+const { GraphQLScalarType } = require('graphql');
+const { Kind } = require('graphql/language');
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -44,12 +45,17 @@ const typeDefs = gql`
   # The "Query" type is special: it lists all of the available queries that
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
+
+  scalar Date
+
   type Query {
     self: User
     user(id: Int!): User
     users: [User]
     usersHeight(unit: HeightUnit = CENTIMETER): [Float]
     posts: [Post]
+    now: Date
+    isFriday(date: Date!): Boolean,
   }
 
   # input object type
@@ -110,7 +116,9 @@ const resolvers = {
     user: (root, args, context) => users.find(user => user.id === args.id),
     users: () => users,
     usersHeight: (root, args, context) => users.map(item => getValue('height', item.height, args.unit)),
-    posts: () => posts
+    posts: () => posts,
+    now: () => new Date(),
+    isFriday: (root, { date }) => date.getDay() === 5
   },
   Mutation: {
     addPost: (root, args) => {
@@ -147,7 +155,23 @@ const resolvers = {
   Post: {
     author: (parent) => users.find(user => user.id === parent.authorId),
     likeGivers: (parent) => parent.likeGiverIds.map(id => users.find(user => user.id === id)),
-  }
+  },
+  Date: new GraphQLScalarType({
+    name: 'Date',
+    description: 'custom scalar type',
+    serialize(value) {
+      return value.getTime();
+    },
+    parseValue(value) {
+      return new Date(value);
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.INT) {
+        return new Date(parseInt(ast.value, 10)); // ast value is always in string format
+      }
+      return null;
+    }
+  }),
 };
 
 // The ApolloServer constructor requires two parameters: your schema

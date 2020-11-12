@@ -85,3 +85,22 @@ vs
     addPost(post: AddPostInput): Post
   }
 ```
+
+
+# query + directives
+```
+query ($includeFriends: Boolean!, $skipSensitiveData: Boolean!) {
+  users {
+    name
+    age @skip(if: $skipSensitiveData)
+    friends @include(if: $includeFriends) {
+      name 
+    }
+  }
+}
+
+{
+  "includeFriends": false,
+  "skipSensitiveData": true
+}
+```

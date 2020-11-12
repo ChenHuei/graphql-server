@@ -1,11 +1,27 @@
-const { ApolloServer, gql } = require('apollo-server');
-const { GraphQLScalarType } = require('graphql');
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
+const { GraphQLScalarType, defaultFieldResolver } = require('graphql');
 const { Kind } = require('graphql/language');
+
+class UpperCaseDirective extends SchemaDirectiveVisitor {
+  visitFieldDefinition(field) {
+    const { resolve = defaultFieldResolver } = field;
+    field.resolve = async function(...args) {
+      const result = await resolve.apply(this, args);
+
+      if (typeof result === 'string') {
+        return result.toUpperCase();
+      }
+      return result;
+    };
+  }
+}
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
 // your data.
 const typeDefs = gql`
+  directive @upper on FIELD_DEFINITION
+
   # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
 
   # 高度
@@ -25,12 +41,12 @@ const typeDefs = gql`
   # This "User" type defines the queryable fields for every user in our data source.
   type User {
     id: Int
-    name: String!
+    name: String! @upper
     age: Int
     friends: [User]
     posts: [Post]
     height(unit: HeightUnit = CENTIMETER): Float
-    weight(unit: WeightUnit = KILOGRAM): Float
+    weight(unit: WeightUnit = KILOGRAM): Float @deprecated (reason: "It's secret")
   }
 
   # This "Pots" type defines the queryable fields for every pos in our data source.
@@ -176,7 +192,9 @@ const resolvers = {
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({ typeDefs, resolvers, schemaDirectives: {
+  upper: UpperCaseDirective
+}});
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }) => {

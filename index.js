@@ -62,6 +62,20 @@ const typeDefs = gql`
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
 
+  interface Animal {
+    name: String
+  }
+
+  type Bird implements Animal {
+    name: String
+    wingSpanLength: Int
+  }
+
+  type Monkey implements Animal {
+    name: String
+    armSpanLength: Int
+  }
+
   scalar Date
 
   type Query {
@@ -71,7 +85,9 @@ const typeDefs = gql`
     usersHeight(unit: HeightUnit = CENTIMETER): [Float]
     posts: [Post]
     now: Date
-    isFriday(date: Date!): Boolean,
+    isFriday(date: Date!): Boolean
+    animal(name: String): Animal
+    animals: [Animal]
   }
 
   # input object type
@@ -112,6 +128,12 @@ const posts = [
   { id: 3, authorId: 1, title: "3", content: "Here's my second post.", likeGiverIds: [] },
 ];
 
+const animals = [
+  { name: 'Chiken Litte', wingSpanLength: 10 },
+  { name: 'Goku', armSpanLength: 20 },
+  { name: 'King Kong', armSpanLength: 200 }
+];
+
 const HeightValue = {
   METRE: 100,
   CENTIMETER: 1,
@@ -134,7 +156,14 @@ const resolvers = {
     usersHeight: (root, args, context) => users.map(item => getValue('height', item.height, args.unit)),
     posts: () => posts,
     now: () => new Date(),
-    isFriday: (root, { date }) => date.getDay() === 5
+    isFriday: (root, { date }) => date.getDay() === 5,
+    animal: (root, args, context) => animals.find(animal => animal.name === args.name),
+    animals: () => animals
+  },
+  Animal: {
+    __resolveType(obj, context, info) {
+      return obj.wingSpanLength ? 'Bird' : 'Monkey'
+    }
   },
   Mutation: {
     addPost: (root, args) => {

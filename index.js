@@ -62,6 +62,7 @@ const typeDefs = gql`
   # clients can execute, along with the return type for each. In this
   # case, the "books" query returns an array of zero or more Books (defined above).
 
+  # interface
   interface Animal {
     name: String
   }
@@ -76,6 +77,17 @@ const typeDefs = gql`
     armSpanLength: Int
   }
 
+  # union
+  union Result = Book | Magazine
+
+  type Book {
+    title: String
+  }
+
+  type Magazine {
+    name: String
+  }
+  
   scalar Date
 
   type Query {
@@ -87,7 +99,8 @@ const typeDefs = gql`
     now: Date
     isFriday(date: Date!): Boolean
     animal(name: String): Animal
-    animals: [Animal]
+    animals: [Animal],
+    search(keyword: String!): [Result]
   }
 
   # input object type
@@ -134,6 +147,9 @@ const animals = [
   { name: 'King Kong', armSpanLength: 200 }
 ];
 
+const magazines = [{ name: 'IT' }, { name: 'Marry' }];
+const books = [{ title: 'Journey to the West' }, { title: 'Mary Loves Me' }]
+
 const HeightValue = {
   METRE: 100,
   CENTIMETER: 1,
@@ -158,11 +174,22 @@ const resolvers = {
     now: () => new Date(),
     isFriday: (root, { date }) => date.getDay() === 5,
     animal: (root, args, context) => animals.find(animal => animal.name === args.name),
-    animals: () => animals
+    animals: () => animals,
+    search: (root, args) => [
+      ...magazines.filter(magazine => magazine.name.includes(args.keyword)),
+      ...books.filter(book => book.title.includes(args.keyword))
+    ]
+    
+    
   },
   Animal: {
     __resolveType(obj, context, info) {
       return obj.wingSpanLength ? 'Bird' : 'Monkey'
+    }
+  },
+  Result: {
+    __resolveType(obj, context, info) {
+      return obj.name ? 'Magazine' : 'Book'
     }
   },
   Mutation: {

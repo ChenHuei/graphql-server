@@ -126,3 +126,18 @@ query {
   }
 }
 ```
+
+# union
+
+```
+{
+  search(keyword: "Mar") {
+    ... on Magazine {
+      name
+    }
+    ... on Book {
+      title
+    }
+  }
+}
+```

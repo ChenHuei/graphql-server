@@ -104,3 +104,25 @@ query ($includeFriends: Boolean!, $skipSensitiveData: Boolean!) {
   "skipSensitiveData": true
 }
 ```
+
+# interface
+
+```
+共享 field
+
+
+query {
+  animals {
+    name
+  }
+  animal(name: "Chiken Litte") {
+    name
+    ... on Bird {
+      wingSpanLength
+    }
+    ... on Monkey {
+      armSpanLength
+    }
+  }
+}
+```
